@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Little Hiker</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #2b2b2b;
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
+        }
+        
+        .container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            image-rendering: pixelated;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .title {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #8bc34a;
+            text-shadow: 2px 2px 0 #306824, 
+                         -1px -1px 0 #306824, 
+                         1px -1px 0 #306824, 
+                         -1px 1px 0 #306824;
+            font-size: 16px;
+            z-index: 10;
+            letter-spacing: 1px;
+        }
+        
+        .signature {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 10px;
+            z-index: 10;
+        }
+        
+        /* Pixel art styling */
+        .pixel-art {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="title">THE LITTLE HIKER</div>
+        <canvas id="scene"></canvas>
+        <div class="signature">@rmcesar.a</div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('scene');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 320;
+        canvas.height = 320;
+        
+        // Scale for high DPI displays
+        const dpi = window.devicePixelRatio || 1;
+        canvas.style.width = `${canvas.width}px`;
+        canvas.style.height = `${canvas.height}px`;
+        canvas.width = canvas.width * dpi;
+        canvas.height = canvas.height * dpi;
+        ctx.scale(dpi, dpi);
+        
+        // Animation variables
+        let frameCount = 0;
+        const hiker = {
+            x: 50,
+            y: 220,
+            width: 16,
+            height: 24,
+            frame: 0,
+            speed: 0.5
+        };
+        
+        // Rain particles
+        const rain = [];
+        for (let i = 0; i < 100; i++) {
+            rain.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                length: Math.random() * 10 + 5,
+                speed: Math.random() * 2 + 1
+            });
+        }
+        
+        // Trees in the forest
+        const trees = [];
+        for (let i = 0; i < 15; i++) {
+            trees.push({
+                x: Math.random() * canvas.width,
+                y: 200 + Math.random() * 30,
+                width: 12 + Math.random() * 10,
+                height: 60 + Math.random() * 40,
+                depth: Math.random() * 0.5 + 0.5
+            });
+        }
+        
+        // Draw functions
+        function drawSky() {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, "#2c3e50");
+            gradient.addColorStop(1, "#34495e");
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, 200);
+            
+            // Draw clouds
+            ctx.fillStyle = 'rgba(200, 200, 200, 0.3)';
+            for (let i = 0; i < 5; i++) {
+                const x = (frameCount * 0.1 + i * 70) % (canvas.width + 70) - 35;
+                const y = 40 + i * 15;
+                const width = 40 + i * 5;
+                const height = 15 + i * 2;
+                
+                ctx.beginPath();
+                ctx.ellipse(x, y, width, height, 0, 0, Math.PI * 2);
+                ctx.ellipse(x + 20, y - 5, width * 0.7, height * 0.7, 0, 0, Math.PI * 2);
+                ctx.ellipse(x - 20, y, width * 0.8, height * 0.8, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function drawGround() {
+            // Ground
+            ctx.fillStyle = '#5d4037';
+            ctx.fillRect(0, 200, canvas.width, canvas.height - 200);
+            
+            // Path
+            ctx.fillStyle = '#8d6e63';
+            ctx.beginPath();
+            ctx.moveTo(0, 240);
+            ctx.quadraticCurveTo(canvas.width / 2, 250, canvas.width, 240);
+            ctx.lineTo(canvas.width, 270);
+            ctx.quadraticCurveTo(canvas.width / 2, 260, 0, 270);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Grass details
+            ctx.fillStyle = '#33691e';
+            for (let i = 0; i < 50; i++) {
+                const x = Math.random() * canvas.width;
+                const y = 205 + Math.random() * 15;
+                const height = 3 + Math.random() * 5;
+                ctx.fillRect(x, y, 1, height);
+            }
+        }
+        
+        function drawTrees() {
+            trees.forEach(tree => {
+                ctx.fillStyle = `rgba(55, 40, 30, ${0.7 * tree.depth})`;
+                
+                // Tree trunk
+                ctx.fillRect(tree.x, tree.y, tree.width * 0.4, -tree.height);
+                
+                // Tree leaves
+                ctx.fillStyle = `rgba(30, 70, 30, ${0.6 * tree.depth})`;
+                ctx.beginPath();
+                ctx.arc(tree.x + tree.width * 0.2, tree.y - tree.height, tree.width * 0.8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Move trees for parallax effect
+                tree.x -= hiker.speed * tree.depth;
+                if (tree.x < -30) {
+                    tree.x = canvas.width + 10;
+                    tree.y = 200 + Math.random() * 30;
+                    tree.width = 12 + Math.random() * 10;
+                    tree.height = 60 + Math.random() * 40;
+                    tree.depth = Math.random() * 0.5 + 0.5;
+                }
+            });
+        }
+        
+        function drawHiker() {
+            // Update hiker position and animation frame
+            hiker.x += hiker.speed;
+            if (hiker.x > canvas.width + 20) {
+                hiker.x = -20;
+            }
+            
+            if (frameCount % 10 === 0) {
+                hiker.frame = (hiker.frame + 1) % 4;
+            }
+            
+            // Draw hiker (simplified pixel art style)
+            ctx.fillStyle = '#3e2723';  // Hat
+            ctx.fillRect(hiker.x + 4, hiker.y - 20, 8, 3);
+            
+            ctx.fillStyle = '#1b5e20';  // Shirt
+            ctx.fillRect(hiker.x + 3, hiker.y - 5, 10, 10);
+            
+            ctx.fillStyle = '#4e342e';  // Shorts
+            ctx.fillRect(hiker.x + 4, hiker.y + 5, 8, 6);
+            
+            ctx.fillStyle = '#ffcc80';  // Skin
+            ctx.fillRect(hiker.x + 4, hiker.y - 17, 8, 12);
+            
+            // Legs (animated)
+            const legOffset = hiker.frame === 1 ? 1 : (hiker.frame === 3 ? -1 : 0);
+            ctx.fillStyle = '#1b5e20';  // Pants legs
+            ctx.fillRect(hiker.x + 5, hiker.y + 11, 3, 10);
+            ctx.fillRect(hiker.x + 8, hiker.y + 11 + legOffset, 3, 10);
+        }
+        
+        function drawRain() {
+            ctx.strokeStyle = 'rgba(200, 200, 255, 0.6)';
+            ctx.lineWidth = 1;
+            
+            rain.forEach(drop => {
+                ctx.beginPath();
+                ctx.moveTo(drop.x, drop.y);
+                ctx.lineTo(drop.x - 1, drop.y + drop.length);
+                ctx.stroke();
+                
+                // Update position
+                drop.x -= drop.speed * 0.5;
+                drop.y += drop.speed;
+                
+                // Reset when out of view
+                if (drop.y > canvas.height || drop.x < 0) {
+                    drop.x = Math.random() * canvas.width + canvas.width / 2;
+                    drop.y = Math.random() * 50 - 100;
+                }
+            });
+        }
+        
+        // Main animation loop
+        function animate() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw scene elements
+            drawSky();
+            drawRain();
+            drawGround();
+            drawTrees();
+            drawHiker();
+            
+            // Increment frame counter
+            frameCount++;
+            
+            // Request next frame
+            requestAnimationFrame(animate);
+        }
+        
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>
