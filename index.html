@@ -12,7 +12,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: #2b2b2b;
+            background: #2c3e50; /* Match the sky gradient top color */
             font-family: 'Press Start 2P', cursive;
             overflow: hidden;
         }
@@ -36,18 +36,19 @@
         
         .title {
             position: absolute;
-            top: 20px;
-            left: 0;
-            right: 0;
-            text-align: center;
+            top: 15px; /* Adjusted position */
+            left: 15px; /* Move more to the left */
+            text-align: left; /* Align left instead of center */
             color: #8bc34a;
             text-shadow: 2px 2px 0 #306824, 
                          -1px -1px 0 #306824, 
                          1px -1px 0 #306824, 
                          -1px 1px 0 #306824;
-            font-size: 16px;
+            font-size: 14px; /* Smaller font size */
             z-index: 10;
             letter-spacing: 1px;
+            max-width: 70%; /* Prevent overflow */
+            line-height: 1.4;
         }
         
         .signature {
@@ -91,6 +92,7 @@
         
         // Animation variables
         let frameCount = 0;
+        let lastTime = 0;
         const hiker = {
             x: 50,
             y: 220,
@@ -100,14 +102,15 @@
             speed: 0.5
         };
         
-        // Rain particles
+        // Enhanced rain particles - more prominent
         const rain = [];
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 200; i++) { // Increased number of raindrops
             rain.push({
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
-                length: Math.random() * 10 + 5,
-                speed: Math.random() * 2 + 1
+                length: Math.random() * 12 + 8, // Longer raindrops
+                speed: Math.random() * 3 + 2, // Faster falling
+                opacity: Math.random() * 0.5 + 0.5 // More opaque
             });
         }
         
@@ -132,8 +135,8 @@
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, 200);
             
-            // Draw clouds
-            ctx.fillStyle = 'rgba(200, 200, 200, 0.3)';
+            // Draw clouds (more transparent to see rain better)
+            ctx.fillStyle = 'rgba(200, 200, 200, 0.2)';
             for (let i = 0; i < 5; i++) {
                 const x = (frameCount * 0.1 + i * 70) % (canvas.width + 70) - 35;
                 const y = 40 + i * 15;
@@ -230,29 +233,36 @@
         }
         
         function drawRain() {
-            ctx.strokeStyle = 'rgba(200, 200, 255, 0.6)';
-            ctx.lineWidth = 1;
-            
             rain.forEach(drop => {
+                // More visible rain with varying opacity
+                ctx.strokeStyle = `rgba(180, 200, 255, ${drop.opacity})`;
+                ctx.lineWidth = 1.5; // Slightly thicker lines
+                
                 ctx.beginPath();
                 ctx.moveTo(drop.x, drop.y);
-                ctx.lineTo(drop.x - 1, drop.y + drop.length);
+                ctx.lineTo(drop.x - 1.5, drop.y + drop.length);
                 ctx.stroke();
                 
                 // Update position
-                drop.x -= drop.speed * 0.5;
+                drop.x -= drop.speed * 0.7;
                 drop.y += drop.speed;
                 
                 // Reset when out of view
                 if (drop.y > canvas.height || drop.x < 0) {
                     drop.x = Math.random() * canvas.width + canvas.width / 2;
                     drop.y = Math.random() * 50 - 100;
+                    drop.opacity = Math.random() * 0.5 + 0.5;
                 }
             });
         }
         
-        // Main animation loop
-        function animate() {
+        // Main animation loop with time-based updates for consistent speed
+        function animate(currentTime) {
+            // Calculate delta time for consistent animation speed
+            if (!lastTime) lastTime = currentTime;
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+            
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
@@ -271,7 +281,15 @@
         }
         
         // Start animation
-        animate();
+        requestAnimationFrame(animate);
+        
+        // Ensure animation continues when tab is not visible
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                lastTime = 0; // Reset time to avoid large delta after pause
+                requestAnimationFrame(animate);
+            }
+        });
     </script>
 </body>
 </html>
