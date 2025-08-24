@@ -12,7 +12,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: #2c3e50;
+            background: #2c3e50; /* Match the sky gradient top color */
             font-family: 'Press Start 2P', cursive;
             overflow: hidden;
         }
@@ -36,18 +36,18 @@
         
         .title {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            text-align: left;
+            top: 15px; /* Adjusted position */
+            left: 15px; /* Move more to the left */
+            text-align: left; /* Align left instead of center */
             color: #8bc34a;
             text-shadow: 2px 2px 0 #306824, 
                          -1px -1px 0 #306824, 
                          1px -1px 0 #306824, 
                          -1px 1px 0 #306824;
-            font-size: 14px;
+            font-size: 14px; /* Smaller font size */
             z-index: 10;
             letter-spacing: 1px;
-            max-width: 70%;
+            max-width: 70%; /* Prevent overflow */
             line-height: 1.4;
         }
         
@@ -60,6 +60,7 @@
             z-index: 10;
         }
         
+        /* Pixel art styling */
         .pixel-art {
             image-rendering: pixelated;
             image-rendering: crisp-edges;
@@ -78,15 +79,15 @@
         // Canvas setup
         const canvas = document.getElementById('scene');
         const ctx = canvas.getContext('2d');
-        const LOGICAL_WIDTH = 320;
-        const LOGICAL_HEIGHT = 320;
+        canvas.width = 320;
+        canvas.height = 320;
         
         // Scale for high DPI displays
         const dpi = window.devicePixelRatio || 1;
-        canvas.style.width = `${LOGICAL_WIDTH}px`;
-        canvas.style.height = `${LOGICAL_HEIGHT}px`;
-        canvas.width = LOGICAL_WIDTH * dpi;
-        canvas.height = LOGICAL_HEIGHT * dpi;
+        canvas.style.width = `${canvas.width}px`;
+        canvas.style.height = `${canvas.height}px`;
+        canvas.width = canvas.width * dpi;
+        canvas.height = canvas.height * dpi;
         ctx.scale(dpi, dpi);
         
         // Animation variables
@@ -101,28 +102,27 @@
             speed: 0.5
         };
         
-        // Enhanced rain particles with better mobile distribution
+        // Enhanced rain particles - more prominent
         const rain = [];
-        for (let i = 0; i < 200; i++) {
+        for (let i = 0; i < 200; i++) { // Increased number of raindrops
             rain.push({
-                x: Math.random() * LOGICAL_WIDTH, // Use logical width
-                y: Math.random() * LOGICAL_HEIGHT, // Use logical height
-                length: Math.random() * 12 + 8,
-                speed: Math.random() * 3 + 2,
-                opacity: Math.random() * 0.5 + 0.5
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                length: Math.random() * 12 + 8, // Longer raindrops
+                speed: Math.random() * 3 + 2, // Faster falling
+                opacity: Math.random() * 0.5 + 0.5 // More opaque
             });
         }
         
-        // Increased number of trees for a denser forest
+        // Trees in the forest
         const trees = [];
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 15; i++) {
             trees.push({
-                x: Math.random() * LOGICAL_WIDTH * 1.5,
+                x: Math.random() * canvas.width,
                 y: 200 + Math.random() * 30,
                 width: 12 + Math.random() * 10,
                 height: 60 + Math.random() * 40,
-                depth: Math.random() * 0.5 + 0.5,
-                type: Math.floor(Math.random() * 3)
+                depth: Math.random() * 0.5 + 0.5
             });
         }
         
@@ -133,12 +133,12 @@
             gradient.addColorStop(1, "#34495e");
             
             ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, LOGICAL_WIDTH, 200);
+            ctx.fillRect(0, 0, canvas.width, 200);
             
-            // Draw clouds
+            // Draw clouds (more transparent to see rain better)
             ctx.fillStyle = 'rgba(200, 200, 200, 0.2)';
             for (let i = 0; i < 5; i++) {
-                const x = (frameCount * 0.1 + i * 70) % (LOGICAL_WIDTH + 70) - 35;
+                const x = (frameCount * 0.1 + i * 70) % (canvas.width + 70) - 35;
                 const y = 40 + i * 15;
                 const width = 40 + i * 5;
                 const height = 15 + i * 2;
@@ -154,22 +154,22 @@
         function drawGround() {
             // Ground
             ctx.fillStyle = '#5d4037';
-            ctx.fillRect(0, 200, LOGICAL_WIDTH, LOGICAL_HEIGHT - 200);
+            ctx.fillRect(0, 200, canvas.width, canvas.height - 200);
             
             // Path
             ctx.fillStyle = '#8d6e63';
             ctx.beginPath();
             ctx.moveTo(0, 240);
-            ctx.quadraticCurveTo(LOGICAL_WIDTH / 2, 250, LOGICAL_WIDTH, 240);
-            ctx.lineTo(LOGICAL_WIDTH, 270);
-            ctx.quadraticCurveTo(LOGICAL_WIDTH / 2, 260, 0, 270);
+            ctx.quadraticCurveTo(canvas.width / 2, 250, canvas.width, 240);
+            ctx.lineTo(canvas.width, 270);
+            ctx.quadraticCurveTo(canvas.width / 2, 260, 0, 270);
             ctx.closePath();
             ctx.fill();
             
             // Grass details
             ctx.fillStyle = '#33691e';
             for (let i = 0; i < 50; i++) {
-                const x = Math.random() * LOGICAL_WIDTH;
+                const x = Math.random() * canvas.width;
                 const y = 205 + Math.random() * 15;
                 const height = 3 + Math.random() * 5;
                 ctx.fillRect(x, y, 1, height);
@@ -178,46 +178,25 @@
         
         function drawTrees() {
             trees.forEach(tree => {
-                // Draw different types of trees
-                if (tree.type === 0) {
-                    // Pine tree style
-                    ctx.fillStyle = `rgba(55, 40, 30, ${0.7 * tree.depth})`;
-                    ctx.fillRect(tree.x, tree.y, tree.width * 0.4, -tree.height);
-                    
-                    ctx.fillStyle = `rgba(30, 70, 30, ${0.6 * tree.depth})`;
-                    for (let i = 0; i < 3; i++) {
-                        const layerSize = tree.width * (0.8 - i * 0.2);
-                        const layerHeight = tree.height * (0.3 + i * 0.2);
-                        ctx.beginPath();
-                        ctx.arc(tree.x + tree.width * 0.2, tree.y - tree.height + layerHeight, layerSize, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                } else if (tree.type === 1) {
-                    // Round tree style
-                    ctx.fillStyle = `rgba(55, 40, 30, ${0.7 * tree.depth})`;
-                    ctx.fillRect(tree.x, tree.y, tree.width * 0.4, -tree.height * 0.7);
-                    
-                    ctx.fillStyle = `rgba(40, 80, 30, ${0.6 * tree.depth})`;
-                    ctx.beginPath();
-                    ctx.arc(tree.x + tree.width * 0.2, tree.y - tree.height * 0.7, tree.width * 0.9, 0, Math.PI * 2);
-                    ctx.fill();
-                } else {
-                    // Bush style
-                    ctx.fillStyle = `rgba(40, 80, 30, ${0.7 * tree.depth})`;
-                    ctx.beginPath();
-                    ctx.arc(tree.x + tree.width * 0.2, tree.y, tree.width * 0.8, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+                ctx.fillStyle = `rgba(55, 40, 30, ${0.7 * tree.depth})`;
+                
+                // Tree trunk
+                ctx.fillRect(tree.x, tree.y, tree.width * 0.4, -tree.height);
+                
+                // Tree leaves
+                ctx.fillStyle = `rgba(30, 70, 30, ${0.6 * tree.depth})`;
+                ctx.beginPath();
+                ctx.arc(tree.x + tree.width * 0.2, tree.y - tree.height, tree.width * 0.8, 0, Math.PI * 2);
+                ctx.fill();
                 
                 // Move trees for parallax effect
                 tree.x -= hiker.speed * tree.depth;
-                if (tree.x < -50) {
-                    tree.x = LOGICAL_WIDTH + Math.random() * 50;
+                if (tree.x < -30) {
+                    tree.x = canvas.width + 10;
                     tree.y = 200 + Math.random() * 30;
                     tree.width = 12 + Math.random() * 10;
                     tree.height = 60 + Math.random() * 40;
                     tree.depth = Math.random() * 0.5 + 0.5;
-                    tree.type = Math.floor(Math.random() * 3);
                 }
             });
         }
@@ -225,7 +204,7 @@
         function drawHiker() {
             // Update hiker position and animation frame
             hiker.x += hiker.speed;
-            if (hiker.x > LOGICAL_WIDTH + 20) {
+            if (hiker.x > canvas.width + 20) {
                 hiker.x = -20;
             }
             
@@ -255,8 +234,9 @@
         
         function drawRain() {
             rain.forEach(drop => {
+                // More visible rain with varying opacity
                 ctx.strokeStyle = `rgba(180, 200, 255, ${drop.opacity})`;
-                ctx.lineWidth = 1.5;
+                ctx.lineWidth = 1.5; // Slightly thicker lines
                 
                 ctx.beginPath();
                 ctx.moveTo(drop.x, drop.y);
@@ -267,23 +247,24 @@
                 drop.x -= drop.speed * 0.7;
                 drop.y += drop.speed;
                 
-                // Reset when out of view - using logical dimensions
-                if (drop.y > LOGICAL_HEIGHT || drop.x < -10) {
-                    drop.x = Math.random() * (LOGICAL_WIDTH + 50); // Better distribution
+                // Reset when out of view
+                if (drop.y > canvas.height || drop.x < 0) {
+                    drop.x = Math.random() * canvas.width + canvas.width / 2;
                     drop.y = Math.random() * 50 - 100;
                     drop.opacity = Math.random() * 0.5 + 0.5;
                 }
             });
         }
         
-        // Main animation loop with time-based updates
+        // Main animation loop with time-based updates for consistent speed
         function animate(currentTime) {
+            // Calculate delta time for consistent animation speed
             if (!lastTime) lastTime = currentTime;
             const deltaTime = currentTime - lastTime;
             lastTime = currentTime;
             
             // Clear canvas
-            ctx.clearRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             // Draw scene elements
             drawSky();
@@ -305,7 +286,7 @@
         // Ensure animation continues when tab is not visible
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) {
-                lastTime = 0;
+                lastTime = 0; // Reset time to avoid large delta after pause
                 requestAnimationFrame(animate);
             }
         });
