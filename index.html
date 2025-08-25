@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Little Hiker</title>
+    <title>The Little Hiker - Time-Based Scenes</title>
     <style>
         body {
             margin: 0;
@@ -12,7 +12,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: #2c3e50;
+            background: #1a1f2d;
             font-family: 'Press Start 2P', cursive;
             overflow: hidden;
         }
@@ -75,6 +75,20 @@
     </div>
 
     <script>
+        // Scene management
+        const SCENES = {
+            RAIN: 'rain',
+            CAMPFIRE: 'campfire'
+        };
+        
+        let currentScene = null;
+        
+        // Check time and determine which scene to show
+        function getSceneFromTime() {
+            const hour = new Date().getHours();
+            return (hour >= 6 && hour < 18) ? SCENES.RAIN : SCENES.CAMPFIRE;
+        }
+        
         // Canvas setup
         const canvas = document.getElementById('scene');
         const ctx = canvas.getContext('2d');
@@ -92,41 +106,158 @@
         // Animation variables
         let frameCount = 0;
         let lastTime = 0;
-        const hiker = {
-            x: 50,
-            y: 220,
-            width: 16,
-            height: 24,
-            frame: 0,
-            speed: 0.5
+        
+        // RAIN SCENE VARIABLES
+        let rainScene = {
+            hiker: {
+                x: 50,
+                y: 220,
+                width: 16,
+                height: 24,
+                frame: 0,
+                speed: 0.5
+            },
+            rain: [],
+            trees: [],
+            initialized: false
         };
         
-        // Improved rain particles for better distribution
-        const rain = [];
-        for (let i = 0; i < 100; i++) {
-            rain.push({
-                x: Math.random() * LOGICAL_WIDTH,
-                y: Math.random() * LOGICAL_HEIGHT,
-                length: Math.random() * 10 + 6,
-                speed: Math.random() * 2 + 1.5,
-                opacity: Math.random() * 0.4 + 0.3
-            });
+        // CAMPFIRE SCENE VARIABLES (using the exact code from phase 2)
+        let campfireScene = {
+            stars: [],
+            fireParticles: [],
+            trees: [],
+            fireflies: [],
+            grassPositions: [],
+            groundTexture: null,
+            initialized: false
+        };
+        
+        // Initialize rain scene
+        function initRainScene() {
+            if (rainScene.initialized) return;
+            
+            // Initialize rain particles
+            for (let i = 0; i < 100; i++) {
+                rainScene.rain.push({
+                    x: Math.random() * LOGICAL_WIDTH,
+                    y: Math.random() * LOGICAL_HEIGHT,
+                    length: Math.random() * 10 + 6,
+                    speed: Math.random() * 2 + 1.5,
+                    opacity: Math.random() * 0.4 + 0.3
+                });
+            }
+            
+            // Initialize trees
+            for (let i = 0; i < 15; i++) {
+                rainScene.trees.push({
+                    x: Math.random() * LOGICAL_WIDTH,
+                    y: 200 + Math.random() * 30,
+                    width: 12 + Math.random() * 10,
+                    height: 60 + Math.random() * 40,
+                    depth: Math.random() * 0.5 + 0.5
+                });
+            }
+            
+            rainScene.initialized = true;
         }
         
-        // Trees in the forest
-        const trees = [];
-        for (let i = 0; i < 15; i++) {
-            trees.push({
-                x: Math.random() * LOGICAL_WIDTH,
-                y: 200 + Math.random() * 30,
-                width: 12 + Math.random() * 10,
-                height: 60 + Math.random() * 40,
-                depth: Math.random() * 0.5 + 0.5
-            });
+        // Initialize campfire scene (exact code from phase 2)
+        function initCampfireScene() {
+            if (campfireScene.initialized) return;
+            
+            // Initialize stars
+            for (let i = 0; i < 120; i++) {
+                campfireScene.stars.push({
+                    x: Math.random() * LOGICAL_WIDTH,
+                    y: Math.random() * 180,
+                    size: Math.random() * 1.2 + 0.3,
+                    brightness: Math.random() * 0.4 + 0.3,
+                    twinkleSpeed: Math.random() * 0.02 + 0.005,
+                    moveSpeed: Math.random() * 0.02 + 0.01
+                });
+            }
+            
+            // Initialize fire particles
+            for (let i = 0; i < 18; i++) {
+                campfireScene.fireParticles.push({
+                    x: 0,
+                    y: 0,
+                    size: Math.random() * 1.8 + 1.2,
+                    speed: Math.random() * 0.7 + 0.3,
+                    life: Math.random() * 100,
+                    maxLife: Math.random() * 70 + 50,
+                    angle: 0,
+                    hue: Math.random() * 30 + 20
+                });
+            }
+            
+            // Initialize trees
+            for (let i = 0; i < 20; i++) {
+                campfireScene.trees.push({
+                    x: Math.random() * LOGICAL_WIDTH,
+                    y: 200 + Math.random() * 30,
+                    width: 12 + Math.random() * 10,
+                    height: 60 + Math.random() * 40,
+                    depth: Math.random() * 0.5 + 0.5
+                });
+            }
+            
+            // Initialize fireflies
+            for (let i = 0; i < 7; i++) {
+                campfireScene.fireflies.push({
+                    x: Math.random() * LOGICAL_WIDTH,
+                    y: 100 + Math.random() * 180,
+                    size: Math.random() * 0.8 + 0.8,
+                    speed: 0.3,
+                    angle: Math.random() * Math.PI * 2,
+                    brightness: Math.random() * 0.4 + 0.3,
+                    changeDirection: Math.floor(Math.random() * 120) + 80
+                });
+            }
+            
+            // Initialize grass positions
+            for (let i = 0; i < 40; i++) {
+                campfireScene.grassPositions.push({
+                    x: Math.random() * LOGICAL_WIDTH,
+                    y: 200 + Math.random() * 15,
+                    height: 2 + Math.random() * 4
+                });
+            }
+            
+            // Create ground texture (from phase 2)
+            const textureCanvas = document.createElement('canvas');
+            textureCanvas.width = 64;
+            textureCanvas.height = 64;
+            const textureCtx = textureCanvas.getContext('2d');
+            
+            // Base color
+            textureCtx.fillStyle = '#5d4037';
+            textureCtx.fillRect(0, 0, 64, 64);
+            
+            // Add texture details
+            textureCtx.fillStyle = '#4e342e';
+            for (let i = 0; i < 150; i++) {
+                const x = Math.floor(Math.random() * 64);
+                const y = Math.floor(Math.random() * 64);
+                const size = Math.random() > 0.9 ? 2 : 1;
+                textureCtx.fillRect(x, y, size, size);
+            }
+            
+            // Add some lighter spots
+            textureCtx.fillStyle = '#6d4c41';
+            for (let i = 0; i < 50; i++) {
+                const x = Math.floor(Math.random() * 64);
+                const y = Math.floor(Math.random() * 64);
+                textureCtx.fillRect(x, y, 1, 1);
+            }
+            
+            campfireScene.groundTexture = textureCanvas;
+            campfireScene.initialized = true;
         }
         
-        // Draw functions
-        function drawSky() {
+        // RAIN SCENE DRAWING FUNCTIONS
+        function drawRainSky() {
             const gradient = ctx.createLinearGradient(0, 0, 0, 200);
             gradient.addColorStop(0, "#2c3e50");
             gradient.addColorStop(1, "#34495e");
@@ -150,7 +281,7 @@
             }
         }
         
-        function drawGround() {
+        function drawRainGround() {
             // Ground
             ctx.fillStyle = '#5d4037';
             ctx.fillRect(0, 200, LOGICAL_WIDTH, LOGICAL_HEIGHT - 200);
@@ -175,8 +306,8 @@
             }
         }
         
-        function drawTrees() {
-            trees.forEach(tree => {
+        function drawRainTrees() {
+            rainScene.trees.forEach(tree => {
                 ctx.fillStyle = `rgba(55, 40, 30, ${0.7 * tree.depth})`;
                 
                 // Tree trunk
@@ -189,7 +320,7 @@
                 ctx.fill();
                 
                 // Move trees for parallax effect
-                tree.x -= hiker.speed * tree.depth;
+                tree.x -= rainScene.hiker.speed * tree.depth;
                 if (tree.x < -30) {
                     tree.x = LOGICAL_WIDTH + 10;
                     tree.y = 200 + Math.random() * 30;
@@ -202,43 +333,43 @@
         
         function drawHiker() {
             // Update hiker position and animation frame
-            hiker.x += hiker.speed;
-            if (hiker.x > LOGICAL_WIDTH + 20) {
-                hiker.x = -20;
+            rainScene.hiker.x += rainScene.hiker.speed;
+            if (rainScene.hiker.x > LOGICAL_WIDTH + 20) {
+                rainScene.hiker.x = -20;
             }
             
             if (frameCount % 10 === 0) {
-                hiker.frame = (hiker.frame + 1) % 4;
+                rainScene.hiker.frame = (rainScene.hiker.frame + 1) % 4;
             }
             
             // Draw hiker (simplified pixel art style)
             ctx.fillStyle = '#3e2723';  // Hat
-            ctx.fillRect(hiker.x + 4, hiker.y - 20, 8, 3);
+            ctx.fillRect(rainScene.hiker.x + 4, rainScene.hiker.y - 20, 8, 3);
             
             ctx.fillStyle = '#1b5e20';  // Shirt
-            ctx.fillRect(hiker.x + 3, hiker.y - 5, 10, 10);
+            ctx.fillRect(rainScene.hiker.x + 3, rainScene.hiker.y - 5, 10, 10);
             
             ctx.fillStyle = '#4e342e';  // Shorts
-            ctx.fillRect(hiker.x + 4, hiker.y + 5, 8, 6);
+            ctx.fillRect(rainScene.hiker.x + 4, rainScene.hiker.y + 5, 8, 6);
             
             ctx.fillStyle = '#ffcc80';  // Skin
-            ctx.fillRect(hiker.x + 4, hiker.y - 17, 8, 12);
+            ctx.fillRect(rainScene.hiker.x + 4, rainScene.hiker.y - 17, 8, 12);
             
-            // Backpack (fixed position - on his back, not in his mouth)
-            ctx.fillStyle = '#7b1fa2';  // Purple backpack
-            ctx.fillRect(hiker.x + 2, hiker.y - 8, 5, 8);
-            ctx.fillStyle = '#5d4037';  // Brown strap
-            ctx.fillRect(hiker.x + 6, hiker.y - 7, 2, 1);
+            // Backpack
+            ctx.fillStyle = '#7b1fa2';
+            ctx.fillRect(rainScene.hiker.x + 2, rainScene.hiker.y - 8, 5, 8);
+            ctx.fillStyle = '#5d4037';
+            ctx.fillRect(rainScene.hiker.x + 6, rainScene.hiker.y - 7, 2, 1);
             
             // Legs (animated)
-            const legOffset = hiker.frame === 1 ? 1 : (hiker.frame === 3 ? -1 : 0);
-            ctx.fillStyle = '#1b5e20';  // Pants legs
-            ctx.fillRect(hiker.x + 5, hiker.y + 11, 3, 10);
-            ctx.fillRect(hiker.x + 8, hiker.y + 11 + legOffset, 3, 10);
+            const legOffset = rainScene.hiker.frame === 1 ? 1 : (rainScene.hiker.frame === 3 ? -1 : 0);
+            ctx.fillStyle = '#1b5e20';
+            ctx.fillRect(rainScene.hiker.x + 5, rainScene.hiker.y + 11, 3, 10);
+            ctx.fillRect(rainScene.hiker.x + 8, rainScene.hiker.y + 11 + legOffset, 3, 10);
         }
         
         function drawRain() {
-            rain.forEach(drop => {
+            rainScene.rain.forEach(drop => {
                 ctx.strokeStyle = `rgba(180, 200, 255, ${drop.opacity})`;
                 ctx.lineWidth = 1.2;
                 
@@ -251,7 +382,7 @@
                 drop.x -= drop.speed * 0.5;
                 drop.y += drop.speed;
                 
-                // Reset when out of view - using logical dimensions
+                // Reset when out of view
                 if (drop.y > LOGICAL_HEIGHT || drop.x < -5) {
                     drop.x = Math.random() * (LOGICAL_WIDTH + 20);
                     drop.y = Math.random() * 50 - 100;
@@ -260,7 +391,304 @@
             });
         }
         
-        // Main animation loop with time-based updates
+        // CAMPFIRE SCENE DRAWING FUNCTIONS (exact code from phase 2)
+        function drawCampfireSky() {
+            // Night sky gradient - less saturated
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, "#1a2436");
+            gradient.addColorStop(1, "#2c3e50");
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, LOGICAL_WIDTH, 200);
+            
+            // Draw moving stars
+            campfireScene.stars.forEach(star => {
+                const twinkle = Math.sin(frameCount * star.twinkleSpeed) * 0.3 + 0.7;
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness * twinkle})`;
+                ctx.fillRect(star.x, star.y, star.size, star.size);
+                
+                // Move stars slowly
+                star.x -= star.moveSpeed;
+                if (star.x < -5) {
+                    star.x = LOGICAL_WIDTH + 5;
+                    star.y = Math.random() * 180;
+                }
+            });
+            
+            // Moon - more subtle
+            const moonRadius = 11;
+            const moonX = 260;
+            const moonY = 50;
+            
+            ctx.fillStyle = 'rgba(230, 230, 210, 0.8)';
+            ctx.beginPath();
+            ctx.arc(moonX, moonY, moonRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Moon craters
+            ctx.fillStyle = 'rgba(200, 200, 180, 0.6)';
+            ctx.beginPath();
+            ctx.arc(moonX - 4, moonY - 3, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'rgba(210, 210, 190, 0.6)';
+            ctx.beginPath();
+            ctx.arc(moonX + 3, moonY + 3, 1.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'rgba(190, 190, 170, 0.6)';
+            ctx.beginPath();
+            ctx.arc(moonX + 5, moonY - 5, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Add subtle glow around the moon
+            const moonGlow = ctx.createRadialGradient(
+                moonX, moonY, moonRadius,
+                moonX, moonY, moonRadius + 6
+            );
+            moonGlow.addColorStop(0, 'rgba(230, 230, 210, 0.2)');
+            moonGlow.addColorStop(1, 'rgba(230, 230, 210, 0)');
+            
+            ctx.fillStyle = moonGlow;
+            ctx.beginPath();
+            ctx.arc(moonX, moonY, moonRadius + 6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function drawCampfireGround() {
+            // Draw textured ground (fixed implementation from phase 2)
+            const pattern = ctx.createPattern(campfireScene.groundTexture, 'repeat');
+            ctx.fillStyle = pattern;
+            ctx.fillRect(0, 200, LOGICAL_WIDTH, LOGICAL_HEIGHT - 200);
+            
+            // Draw minimal, spread out grass
+            ctx.fillStyle = '#33691e';
+            campfireScene.grassPositions.forEach(grass => {
+                ctx.fillRect(grass.x, grass.y, 1, grass.height);
+            });
+        }
+        
+        function drawCampfireTrees() {
+            campfireScene.trees.forEach(tree => {
+                ctx.fillStyle = `rgba(55, 40, 30, ${0.7 * tree.depth})`;
+                
+                // Tree trunk
+                ctx.fillRect(tree.x, tree.y, tree.width * 0.4, -tree.height);
+                
+                // Tree leaves (darker at night)
+                ctx.fillStyle = `rgba(15, 40, 15, ${0.7 * tree.depth})`;
+                ctx.beginPath();
+                ctx.arc(tree.x + tree.width * 0.2, tree.y - tree.height, tree.width * 0.8, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        function drawTent() {
+            // Tent position
+            const tentX = LOGICAL_WIDTH / 2 - 80;
+            const tentY = 230;
+            
+            // Tent base
+            ctx.fillStyle = '#1b5e20';
+            ctx.fillRect(tentX, tentY, 40, 20);
+            
+            // Tent triangle
+            ctx.fillStyle = '#2e7d32';
+            ctx.beginPath();
+            ctx.moveTo(tentX, tentY);
+            ctx.lineTo(tentX + 20, tentY - 25);
+            ctx.lineTo(tentX + 40, tentY);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Tent door
+            ctx.fillStyle = '#8d6e63';
+            ctx.fillRect(tentX + 15, tentY, 10, 8);
+            
+            // Tent pole
+            ctx.fillStyle = '#5d4037';
+            ctx.fillRect(tentX + 19, tentY - 5, 2, 5);
+        }
+        
+        function drawSleepingBag() {
+            const bagX = LOGICAL_WIDTH / 2 - 75;
+            const bagY = 240;
+            
+            // Sleeping bag
+            ctx.fillStyle = '#1b5e20';
+            ctx.fillRect(bagX, bagY, 30, 10);
+            
+            // Sleeping bag details
+            ctx.fillStyle = '#0d3010';
+            ctx.fillRect(bagX + 5, bagY, 20, 2);
+            ctx.fillRect(bagX + 5, bagY + 4, 20, 2);
+            ctx.fillRect(bagX + 5, bagY + 8, 20, 2);
+            
+            // Pillow
+            ctx.fillStyle = '#f5f5f5';
+            ctx.fillRect(bagX + 25, bagY - 3, 8, 4);
+        }
+        
+        function drawCampfire() {
+            const fireX = LOGICAL_WIDTH / 2 + 10;
+            const fireY = 240;
+            
+            // Draw logs
+            ctx.fillStyle = '#5d4037';
+            
+            // Main horizontal logs
+            ctx.fillRect(fireX - 20, fireY, 40, 8);
+            ctx.fillRect(fireX - 15, fireY - 7, 30, 7);
+            
+            // Additional logs at the base
+            ctx.fillRect(fireX - 25, fireY + 3, 15, 5);
+            ctx.fillRect(fireX + 10, fireY + 3, 15, 5);
+            
+            // Even more logs at the very bottom
+            ctx.fillRect(fireX - 30, fireY + 6, 20, 4);
+            ctx.fillRect(fireX + 10, fireY + 6, 20, 4);
+            ctx.fillRect(fireX - 10, fireY + 6, 20, 4);
+            
+            // Additional fire logs
+            ctx.fillRect(fireX - 22, fireY - 12, 5, 15);
+            ctx.fillRect(fireX - 10, fireY - 15, 5, 18);
+            ctx.fillRect(fireX + 5, fireY - 10, 5, 13);
+            ctx.fillRect(fireX + 17, fireY - 8, 5, 11);
+            
+            // Add more logs to create a proper campfire structure
+            ctx.fillStyle = '#4e342e';
+            ctx.fillRect(fireX - 25, fireY - 5, 6, 10);
+            ctx.fillRect(fireX + 19, fireY - 7, 6, 12);
+            
+            // Add some small kindling pieces
+            ctx.fillStyle = '#6d4c41';
+            ctx.fillRect(fireX - 5, fireY - 3, 3, 8);
+            ctx.fillRect(fireX + 2, fireY - 5, 3, 6);
+            ctx.fillRect(fireX - 12, fireY - 2, 2, 5);
+            ctx.fillRect(fireX + 10, fireY - 4, 2, 7);
+            
+            // Draw fire base (glow with reduced spread and saturation)
+            const gradient = ctx.createRadialGradient(
+                fireX, fireY - 8, 4,
+                fireX, fireY - 8, 16
+            );
+            gradient.addColorStop(0, 'rgba(255, 120, 40, 0.4)'); // Less saturated
+            gradient.addColorStop(1, 'rgba(255, 50, 0, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(fireX, fireY - 8, 16, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Update and draw fire particles (slower and less bright)
+            campfireScene.fireParticles.forEach(particle => {
+                particle.life += 0.7;
+                
+                if (particle.life > particle.maxLife) {
+                    particle.life = 0;
+                    particle.x = fireX + (Math.random() * 8 - 4);
+                    particle.y = fireY - 3;
+                    particle.size = Math.random() * 1.8 + 1.2;
+                    particle.speed = Math.random() * 0.7 + 0.3;
+                    particle.maxLife = Math.random() * 70 + 50;
+                    particle.angle = (Math.random() * 0.6 - 0.3);
+                    particle.hue = Math.random() * 30 + 20;
+                }
+                
+                const lifeRatio = particle.life / particle.maxLife;
+                const x = particle.x + Math.sin(particle.angle) * 1.5;
+                const y = particle.y - particle.speed * (1 - lifeRatio * 0.5);
+                
+                const size = particle.size * (1 - lifeRatio * 0.7);
+                const opacity = (1 - lifeRatio) * 0.8; // Reduced opacity
+                
+                ctx.fillStyle = `hsla(${particle.hue}, 100%, 60%, ${opacity})`;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                particle.x = x;
+                particle.y = y;
+            });
+        }
+        
+        function drawCamper() {
+            const camperX = LOGICAL_WIDTH / 2 - 30;
+            const camperY = 230;
+            
+            // Sitting position
+            ctx.fillStyle = '#3e2723';  // Hat
+            ctx.fillRect(camperX + 4, camperY - 15, 8, 3);
+            
+            ctx.fillStyle = '#1b5e20';  // Shirt
+            ctx.fillRect(camperX + 3, camperY - 2, 10, 8);
+            
+            ctx.fillStyle = '#4e342e';  // Pants
+            ctx.fillRect(camperX + 4, camperY + 6, 8, 6);
+            
+            ctx.fillStyle = '#ffcc80';  // Skin
+            ctx.fillRect(camperX + 4, camperY - 12, 8, 10);
+            
+            // Backpack
+            ctx.fillStyle = '#7b1fa2';
+            ctx.fillRect(camperX - 8, camperY + 5, 8, 10);
+            
+            // Backpack details
+            ctx.fillStyle = '#4a148c';
+            ctx.fillRect(camperX - 7, camperY + 6, 6, 2);
+            ctx.fillRect(camperX - 7, camperY + 10, 6, 2);
+            
+            // Sitting legs
+            ctx.fillStyle = '#1b5e20';
+            ctx.fillRect(camperX + 5, camperY + 12, 3, 6);
+            ctx.fillRect(camperX + 8, camperY + 12, 3, 4);
+            
+            // Resting animation
+            const breathOffset = Math.sin(frameCount * 0.08) * 0.5;
+            ctx.fillRect(camperX + 3, camperY - 2 + breathOffset, 10, 8);
+        }
+        
+        function drawAmbience() {
+            // Draw fireflies spread throughout the scene
+            campfireScene.fireflies.forEach(fly => {
+                // Change direction occasionally
+                if (frameCount % fly.changeDirection === 0) {
+                    fly.angle = Math.random() * Math.PI * 2;
+                }
+                
+                // Move firefly at constant slow speed
+                fly.x += Math.cos(fly.angle) * fly.speed;
+                fly.y += Math.sin(fly.angle) * fly.speed;
+                
+                // Keep fireflies within the scene bounds with wrap-around
+                if (fly.x < -5) fly.x = LOGICAL_WIDTH + 5;
+                if (fly.x > LOGICAL_WIDTH + 5) fly.x = -5;
+                if (fly.y < -5) fly.y = LOGICAL_HEIGHT + 5;
+                if (fly.y > LOGICAL_HEIGHT + 5) fly.y = -5;
+                
+                // Draw firefly with subtle pulsing effect and yellow color
+                const pulse = (Math.sin(frameCount * 0.1) + 1) * 0.2 + 0.3;
+                ctx.fillStyle = `rgba(255, 240, 100, ${pulse * fly.brightness})`; // Yellow color
+                ctx.beginPath();
+                ctx.arc(fly.x, fly.y, fly.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Add very subtle yellow glow
+                const glow = ctx.createRadialGradient(
+                    fly.x, fly.y, 0,
+                    fly.x, fly.y, fly.size * 1.5
+                );
+                glow.addColorStop(0, `rgba(255, 240, 100, ${0.2 * pulse * fly.brightness})`);
+                glow.addColorStop(1, 'rgba(255, 240, 100, 0)');
+                
+                ctx.fillStyle = glow;
+                ctx.beginPath();
+                ctx.arc(fly.x, fly.y, fly.size * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        // Main animation loop
         function animate(currentTime) {
             if (!lastTime) lastTime = currentTime;
             const deltaTime = currentTime - lastTime;
@@ -269,12 +697,24 @@
             // Clear canvas
             ctx.clearRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
             
-            // Draw scene elements
-            drawSky();
-            drawRain();
-            drawGround();
-            drawTrees();
-            drawHiker();
+            // Check if we need to switch scenes
+            const targetScene = getSceneFromTime();
+            if (currentScene !== targetScene) {
+                currentScene = targetScene;
+                
+                if (currentScene === SCENES.RAIN) {
+                    initRainScene();
+                } else {
+                    initCampfireScene();
+                }
+            }
+            
+            // Draw the appropriate scene
+            if (currentScene === SCENES.RAIN) {
+                drawRainScene();
+            } else {
+                drawCampfireScene();
+            }
             
             // Increment frame counter
             frameCount++;
@@ -283,8 +723,40 @@
             requestAnimationFrame(animate);
         }
         
-        // Start animation
-        requestAnimationFrame(animate);
+        function drawRainScene() {
+            drawRainSky();
+            drawRain();
+            drawRainGround();
+            drawRainTrees();
+            drawHiker();
+        }
+        
+        function drawCampfireScene() {
+            drawCampfireSky();
+            drawCampfireGround();
+            drawCampfireTrees();
+            drawTent();
+            drawSleepingBag();
+            drawCampfire();
+            drawCamper();
+            drawAmbience();
+        }
+        
+        // Initialize and start the animation
+        function init() {
+            currentScene = getSceneFromTime();
+            
+            if (currentScene === SCENES.RAIN) {
+                initRainScene();
+            } else {
+                initCampfireScene();
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Start everything
+        init();
         
         // Ensure animation continues when tab is not visible
         document.addEventListener('visibilitychange', function() {
