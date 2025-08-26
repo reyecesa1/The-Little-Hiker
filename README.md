@@ -20,4 +20,4 @@ This project was a fun exercise in creative coding, animation, and creating an i
 
 ## 🚀 See It Live
 
-The project is hosted on GitHub Pages:
+The project is hosted on GitHub Pages:https://reyecesa1.github.io/The-Little-Hiker/
