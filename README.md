@@ -1,3 +1,4 @@
+<img width="706" height="191" alt="TLH png" src="https://github.com/user-attachments/assets/152d32ff-23da-442b-a20f-c591135ee7ed" />
 # The Little Hiker - A Time-Based Pixel Art Scene
 
 A dynamic pixel-art animation built with HTML Canvas that changes its theme based on the user's local time. Experience a serene rainy hike during the day (6 AM - 6 PM) and a tranquil campfire scene at night.
