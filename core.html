@@ -69,7 +69,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="title">THE LITTLE HIKER</div>
+        <div class="title">THE LITTLE HIKERS</div>
         <canvas id="scene"></canvas>
         <div class="signature">@rmcesar.a</div>
     </div>
@@ -109,26 +109,20 @@
         
         // RAIN SCENE VARIABLES
         let rainScene = {
-            hiker: {
-                x: 50,
-                y: 220,
-                width: 16,
-                height: 24,
-                frame: 0,
-                speed: 0.5
-            },
+            hikers: [],
             rain: [],
             trees: [],
             initialized: false
         };
         
-        // CAMPFIRE SCENE VARIABLES (using the exact code from phase 2)
+        // CAMPFIRE SCENE VARIABLES
         let campfireScene = {
             stars: [],
             fireParticles: [],
             trees: [],
             fireflies: [],
             grassPositions: [],
+            campers: [],
             groundTexture: null,
             initialized: false
         };
@@ -136,6 +130,22 @@
         // Initialize rain scene
         function initRainScene() {
             if (rainScene.initialized) return;
+            
+            // Initialize 5 hikers with different positions and colors
+            rainScene.hikers = [];
+            for (let i = 0; i < 5; i++) {
+                rainScene.hikers.push({
+                    x: -30 - i * 40, // Stagger their starting positions
+                    y: 220,
+                    width: 16,
+                    height: 24,
+                    frame: 0,
+                    speed: 0.5 + Math.random() * 0.2, // Slightly different speeds
+                    shirtColor: getShirtColor(i),
+                    backpackColor: getBackpackColor(i),
+                    hatColor: getHatColor(i)
+                });
+            }
             
             // Initialize rain particles
             for (let i = 0; i < 100; i++) {
@@ -162,9 +172,47 @@
             rainScene.initialized = true;
         }
         
-        // Initialize campfire scene (exact code from phase 2)
+        // Helper functions for hiker colors
+        function getShirtColor(index) {
+            const colors = ['#1b5e20', '#0d47a1', '#b71c1c', '#4a148c', '#e65100'];
+            return colors[index % colors.length];
+        }
+        
+        function getBackpackColor(index) {
+            const colors = ['#7b1fa2', '#1976d2', '#c2185b', '#00796b', '#5d4037'];
+            return colors[index % colors.length];
+        }
+        
+        function getHatColor(index) {
+            const colors = ['#3e2723', '#1a237e', '#4e342e', '#212121', '#263238'];
+            return colors[index % colors.length];
+        }
+        
+        // Initialize campfire scene
         function initCampfireScene() {
             if (campfireScene.initialized) return;
+            
+            // Initialize 5 campers with different positions around the fire
+            campfireScene.campers = [];
+            const positions = [
+                { x: LOGICAL_WIDTH / 2 - 30, y: 230, angle: Math.PI * 0.2 },
+                { x: LOGICAL_WIDTH / 2 - 15, y: 240, angle: Math.PI * 0.4 },
+                { x: LOGICAL_WIDTH / 2 + 5, y: 245, angle: Math.PI * 0.6 },
+                { x: LOGICAL_WIDTH / 2 + 25, y: 240, angle: Math.PI * 0.8 },
+                { x: LOGICAL_WIDTH / 2 + 40, y: 230, angle: Math.PI * 1.0 }
+            ];
+            
+            for (let i = 0; i < 5; i++) {
+                campfireScene.campers.push({
+                    x: positions[i].x,
+                    y: positions[i].y,
+                    angle: positions[i].angle,
+                    shirtColor: getShirtColor(i),
+                    backpackColor: getBackpackColor(i),
+                    hatColor: getHatColor(i),
+                    frameOffset: Math.random() * 100 // Different animation timing
+                });
+            }
             
             // Initialize stars
             for (let i = 0; i < 120; i++) {
@@ -225,7 +273,7 @@
                 });
             }
             
-            // Create ground texture (from phase 2)
+            // Create ground texture
             const textureCanvas = document.createElement('canvas');
             textureCanvas.width = 64;
             textureCanvas.height = 64;
@@ -320,7 +368,8 @@
                 ctx.fill();
                 
                 // Move trees for parallax effect
-                tree.x -= rainScene.hiker.speed * tree.depth;
+                const avgSpeed = rainScene.hikers.reduce((sum, hiker) => sum + hiker.speed, 0) / rainScene.hikers.length;
+                tree.x -= avgSpeed * tree.depth;
                 if (tree.x < -30) {
                     tree.x = LOGICAL_WIDTH + 10;
                     tree.y = 200 + Math.random() * 30;
@@ -331,41 +380,43 @@
             });
         }
         
-        function drawHiker() {
-            // Update hiker position and animation frame
-            rainScene.hiker.x += rainScene.hiker.speed;
-            if (rainScene.hiker.x > LOGICAL_WIDTH + 20) {
-                rainScene.hiker.x = -20;
-            }
-            
-            if (frameCount % 10 === 0) {
-                rainScene.hiker.frame = (rainScene.hiker.frame + 1) % 4;
-            }
-            
-            // Draw hiker (simplified pixel art style)
-            ctx.fillStyle = '#3e2723';  // Hat
-            ctx.fillRect(rainScene.hiker.x + 4, rainScene.hiker.y - 20, 8, 3);
-            
-            ctx.fillStyle = '#1b5e20';  // Shirt
-            ctx.fillRect(rainScene.hiker.x + 3, rainScene.hiker.y - 5, 10, 10);
-            
-            ctx.fillStyle = '#4e342e';  // Shorts
-            ctx.fillRect(rainScene.hiker.x + 4, rainScene.hiker.y + 5, 8, 6);
-            
-            ctx.fillStyle = '#ffcc80';  // Skin
-            ctx.fillRect(rainScene.hiker.x + 4, rainScene.hiker.y - 17, 8, 12);
-            
-            // Backpack
-            ctx.fillStyle = '#7b1fa2';
-            ctx.fillRect(rainScene.hiker.x + 2, rainScene.hiker.y - 8, 5, 8);
-            ctx.fillStyle = '#5d4037';
-            ctx.fillRect(rainScene.hiker.x + 6, rainScene.hiker.y - 7, 2, 1);
-            
-            // Legs (animated)
-            const legOffset = rainScene.hiker.frame === 1 ? 1 : (rainScene.hiker.frame === 3 ? -1 : 0);
-            ctx.fillStyle = '#1b5e20';
-            ctx.fillRect(rainScene.hiker.x + 5, rainScene.hiker.y + 11, 3, 10);
-            ctx.fillRect(rainScene.hiker.x + 8, rainScene.hiker.y + 11 + legOffset, 3, 10);
+        function drawHikers() {
+            rainScene.hikers.forEach(hiker => {
+                // Update hiker position and animation frame
+                hiker.x += hiker.speed;
+                if (hiker.x > LOGICAL_WIDTH + 20) {
+                    hiker.x = -20;
+                }
+                
+                if (frameCount % 10 === 0) {
+                    hiker.frame = (hiker.frame + 1) % 4;
+                }
+                
+                // Draw hiker (simplified pixel art style)
+                ctx.fillStyle = hiker.hatColor;  // Hat
+                ctx.fillRect(hiker.x + 4, hiker.y - 20, 8, 3);
+                
+                ctx.fillStyle = hiker.shirtColor;  // Shirt
+                ctx.fillRect(hiker.x + 3, hiker.y - 5, 10, 10);
+                
+                ctx.fillStyle = '#4e342e';  // Shorts
+                ctx.fillRect(hiker.x + 4, hiker.y + 5, 8, 6);
+                
+                ctx.fillStyle = '#ffcc80';  // Skin
+                ctx.fillRect(hiker.x + 4, hiker.y - 17, 8, 12);
+                
+                // Backpack
+                ctx.fillStyle = hiker.backpackColor;
+                ctx.fillRect(hiker.x + 2, hiker.y - 8, 5, 8);
+                ctx.fillStyle = '#5d4037';
+                ctx.fillRect(hiker.x + 6, hiker.y - 7, 2, 1);
+                
+                // Legs (animated)
+                const legOffset = hiker.frame === 1 ? 1 : (hiker.frame === 3 ? -1 : 0);
+                ctx.fillStyle = hiker.shirtColor;
+                ctx.fillRect(hiker.x + 5, hiker.y + 11, 3, 10);
+                ctx.fillRect(hiker.x + 8, hiker.y + 11 + legOffset, 3, 10);
+            });
         }
         
         function drawRain() {
@@ -391,7 +442,7 @@
             });
         }
         
-        // CAMPFIRE SCENE DRAWING FUNCTIONS (exact code from phase 2)
+        // CAMPFIRE SCENE DRAWING FUNCTIONS
         function drawCampfireSky() {
             // Night sky gradient - less saturated
             const gradient = ctx.createLinearGradient(0, 0, 0, 200);
@@ -456,7 +507,7 @@
         }
         
         function drawCampfireGround() {
-            // Draw textured ground (fixed implementation from phase 2)
+            // Draw textured ground
             const pattern = ctx.createPattern(campfireScene.groundTexture, 'repeat');
             ctx.fillStyle = pattern;
             ctx.fillRect(0, 200, LOGICAL_WIDTH, LOGICAL_HEIGHT - 200);
@@ -510,23 +561,34 @@
             ctx.fillRect(tentX + 19, tentY - 5, 2, 5);
         }
         
-        function drawSleepingBag() {
-            const bagX = LOGICAL_WIDTH / 2 - 75;
-            const bagY = 240;
+        function drawSleepingBags() {
+            // Draw multiple sleeping bags for the 5 campers
+            const bagPositions = [
+                { x: LOGICAL_WIDTH / 2 - 75, y: 240 },
+                { x: LOGICAL_WIDTH / 2 - 40, y: 245 },
+                { x: LOGICAL_WIDTH / 2, y: 247 },
+                { x: LOGICAL_WIDTH / 2 + 35, y: 245 },
+                { x: LOGICAL_WIDTH / 2 + 70, y: 240 }
+            ];
             
-            // Sleeping bag
-            ctx.fillStyle = '#1b5e20';
-            ctx.fillRect(bagX, bagY, 30, 10);
-            
-            // Sleeping bag details
-            ctx.fillStyle = '#0d3010';
-            ctx.fillRect(bagX + 5, bagY, 20, 2);
-            ctx.fillRect(bagX + 5, bagY + 4, 20, 2);
-            ctx.fillRect(bagX + 5, bagY + 8, 20, 2);
-            
-            // Pillow
-            ctx.fillStyle = '#f5f5f5';
-            ctx.fillRect(bagX + 25, bagY - 3, 8, 4);
+            bagPositions.forEach((pos, index) => {
+                const bagX = pos.x;
+                const bagY = pos.y;
+                
+                // Sleeping bag
+                ctx.fillStyle = getShirtColor(index);
+                ctx.fillRect(bagX, bagY, 30, 10);
+                
+                // Sleeping bag details
+                ctx.fillStyle = '#0d3010';
+                ctx.fillRect(bagX + 5, bagY, 20, 2);
+                ctx.fillRect(bagX + 5, bagY + 4, 20, 2);
+                ctx.fillRect(bagX + 5, bagY + 8, 20, 2);
+                
+                // Pillow
+                ctx.fillStyle = '#f5f5f5';
+                ctx.fillRect(bagX + 25, bagY - 3, 8, 4);
+            });
         }
         
         function drawCampfire() {
@@ -612,40 +674,41 @@
             });
         }
         
-        function drawCamper() {
-            const camperX = LOGICAL_WIDTH / 2 - 30;
-            const camperY = 230;
-            
-            // Sitting position
-            ctx.fillStyle = '#3e2723';  // Hat
-            ctx.fillRect(camperX + 4, camperY - 15, 8, 3);
-            
-            ctx.fillStyle = '#1b5e20';  // Shirt
-            ctx.fillRect(camperX + 3, camperY - 2, 10, 8);
-            
-            ctx.fillStyle = '#4e342e';  // Pants
-            ctx.fillRect(camperX + 4, camperY + 6, 8, 6);
-            
-            ctx.fillStyle = '#ffcc80';  // Skin
-            ctx.fillRect(camperX + 4, camperY - 12, 8, 10);
-            
-            // Backpack
-            ctx.fillStyle = '#7b1fa2';
-            ctx.fillRect(camperX - 8, camperY + 5, 8, 10);
-            
-            // Backpack details
-            ctx.fillStyle = '#4a148c';
-            ctx.fillRect(camperX - 7, camperY + 6, 6, 2);
-            ctx.fillRect(camperX - 7, camperY + 10, 6, 2);
-            
-            // Sitting legs
-            ctx.fillStyle = '#1b5e20';
-            ctx.fillRect(camperX + 5, camperY + 12, 3, 6);
-            ctx.fillRect(camperX + 8, camperY + 12, 3, 4);
-            
-            // Resting animation
-            const breathOffset = Math.sin(frameCount * 0.08) * 0.5;
-            ctx.fillRect(camperX + 3, camperY - 2 + breathOffset, 10, 8);
+        function drawCampers() {
+            campfireScene.campers.forEach(camper => {
+                const effectiveFrame = frameCount + camper.frameOffset;
+                
+                // Sitting position - adjusted for angle around the campfire
+                ctx.fillStyle = camper.hatColor;  // Hat
+                ctx.fillRect(camper.x + 4, camper.y - 15, 8, 3);
+                
+                ctx.fillStyle = camper.shirtColor;  // Shirt
+                ctx.fillRect(camper.x + 3, camper.y - 2, 10, 8);
+                
+                ctx.fillStyle = '#4e342e';  // Pants
+                ctx.fillRect(camper.x + 4, camper.y + 6, 8, 6);
+                
+                ctx.fillStyle = '#ffcc80';  // Skin
+                ctx.fillRect(camper.x + 4, camper.y - 12, 8, 10);
+                
+                // Backpack
+                ctx.fillStyle = camper.backpackColor;
+                ctx.fillRect(camper.x - 8, camper.y + 5, 8, 10);
+                
+                // Backpack details
+                ctx.fillStyle = '#4a148c';
+                ctx.fillRect(camper.x - 7, camper.y + 6, 6, 2);
+                ctx.fillRect(camper.x - 7, camper.y + 10, 6, 2);
+                
+                // Sitting legs
+                ctx.fillStyle = camper.shirtColor;
+                ctx.fillRect(camper.x + 5, camper.y + 12, 3, 6);
+                ctx.fillRect(camper.x + 8, camper.y + 12, 3, 4);
+                
+                // Resting animation - each camper breathes at their own pace
+                const breathOffset = Math.sin(effectiveFrame * 0.08) * 0.5;
+                ctx.fillRect(camper.x + 3, camper.y - 2 + breathOffset, 10, 8);
+            });
         }
         
         function drawAmbience() {
@@ -728,7 +791,7 @@
             drawRain();
             drawRainGround();
             drawRainTrees();
-            drawHiker();
+            drawHikers();
         }
         
         function drawCampfireScene() {
@@ -736,9 +799,9 @@
             drawCampfireGround();
             drawCampfireTrees();
             drawTent();
-            drawSleepingBag();
+            drawSleepingBags();
             drawCampfire();
-            drawCamper();
+            drawCampers();
             drawAmbience();
         }
         
